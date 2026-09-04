@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import Login from "./Login";
 
-const API_URL = "http://localhost:5000/api/leads";
+const API_URL = "https://future-fs-02-s65s.onrender.com/api/leads";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -34,20 +34,37 @@ const handleLogout = () => {
     followUpDate: ""
   });
   // Get all leads
-  const fetchLeads = async () => {
-    try {
-   const response = await fetch(API_URL, {
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("crmToken")}`
-  }
-});
-      const data = await response.json();
-      setLeads(data);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-    }
-  };
+  // Get all leads
+const fetchLeads = async () => {
+  try {
+    const response = await fetch(API_URL, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("crmToken")}`
+      }
+    });
 
+    if (response.status === 401) {
+      localStorage.removeItem("crmToken");
+      setIsLoggedIn(false);
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch leads");
+    }
+
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      setLeads(data);
+    } else {
+      setLeads([]);
+    }
+  } catch (error) {
+    console.error("Error fetching leads:", error);
+    setLeads([]);
+  }
+};
   useEffect(() => {
   if (isLoggedIn) {
     fetchLeads();
